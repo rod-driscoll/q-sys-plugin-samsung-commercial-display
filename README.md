@@ -1,22 +1,20 @@
 
 # q-sys-plugin-samsung-commercial-display
 
-Q-Sys Plugin for Samsung monitor using the MDC Protocol
+This plugin is a modified version of the Q-Sys plugin "SamsungMDC1.3.0.1" taken from the QSys managed plugins, and modified to extend functionality.
 
 Language: Lua\
 Platform: Q-Sys
 
-Source code location: <https://github.com/rod-driscoll/q-sys-plugin-samsungmdc>
+Source code location: <https://github.com/rod-driscoll/q-sys-plugin-samsung-commercial-display>
 
-This plugin is a modified version of the Q-Sys plugin "SamsungMDC1.3.0.1" taken from the QSys managed plugins, and modified to extend functionality.
+The original documentation has not been included in this repo to avoid accidental IP violation, original documentation can be downloaded with the original plugin using Q-Sys Designer Asset manager.
 
-The original documentation has been removed from this repo to avoid accidental IP violation.
-
-![Control tab](https://github.com/rod-driscoll/q-sys-plugin-samsung-commercial-display/blob/main/content/control.png)\
+![Control tab](https://github.com/rod-driscoll/q-sys-plugin-samsung-commercial-display/blob/master/content/control.png)\
 
 ## Features
 
-All the features of the original module are available by downloading the original module in Q-Sys Designer Asset Manager.
+All the features of the original module (v1.3.0.1) are available by downloading the original module in Q-Sys Designer Asset Manager.
 
 Additional features include:
 
