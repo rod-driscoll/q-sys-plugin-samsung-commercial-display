@@ -1,0 +1,658 @@
+--[[ BEGIN DIGITAL SIGNATURE
+T6FgpRmFpSiFn4uzcxgdxdxmPXz3RWQC5G/Uh3D+BNFc2yocBOQBotwQ0n8GizCAomq7KkEn6JBE2MnoBVTsu1q0scS+JCuJ2EYB7eq2EWhEnexhRHmOCHV3t9RZ/GTMqtC/gDcwdNg7QY5xAdxu4JKubXM+dHdp+dQYepQzTqnu6Nmq/OFzu6+UnAsHybGF77ZvsSy1pfM80yh2dIruvl6JhW5XZcU/c9WHTloCkjTwQAQXR4dd5TOjwwh2pgmZENEwJasIN6c7g8UE73Bh68tyYkUFrUTuRop71mAmchH/di8729CfijQvqFyBIlpRhmC+iX6rESLUQqU1EPN/qg==
+END DIGITAL SIGNATURE ]]
+-- Samsung Commercial Dispalys 
+-- For devices supporting MDC Protocol
+-- by QSC
+-- August 2020
+
+-- Revision details
+-- v1.4.0.0* Rod Driscoll <rod@theavitgroup.com.au> 
+-- *unofficial mod of v1.3.0.1
+
+PluginInfo = {
+  Name = "Enterprise Manager~Samsung~Commercial Display (MDC) v1.4*-DEV-UI",
+  Version = "1.4*",
+  BuildVersion = "1.4.0.0*",
+  Id = "Samsung Commercial Display (MDC) v1.4*-DEV-UI",
+  Author = "QSC",
+  Description = "Control and Status for Samsung Commercial Displays that support the MDC protocol.",
+  Manufacturer = "Samsung",
+  Model = "Commercial Display",
+  IsManaged = true,
+  Type = Reflect and Reflect.Types.Display or 0,
+}
+
+-- Constant Values to use with the Samsung Commercial Display MDC protocol
+-- MDC Defined input names: { InputName, Decimal Value of code } 
+local InputCount = 27
+local InputTypes = { 
+  {Name="HDMI 1", Value=33},
+  {Name="HDMI 2", Value=35},
+  {Name="HDMI 3", Value=49},
+  {Name="HDMI 4", Value=51},
+  {Name="Display Port 1", Value=37},
+  {Name="Display Port 2", Value=38},
+  {Name="Display Port 3", Value=39},
+  {Name="DTV", Value=64},
+  {Name="S-Video", Value=4},
+  {Name="Component", Value=8},
+  {Name="AV1", Value=12},
+  {Name="AV2", Value=13},
+  {Name="EXT", Value=14},
+  {Name="DVI", Value=24},
+  {Name="PC", Value=20},
+  {Name="BNC", Value=30},
+  {Name="Magic Info", Value=32},
+  {Name="Plugin Module", Value=80},
+  {Name="HD Base T", Value=85},
+  {Name="OCM", Value=86},
+  {Name="Media", Value=96},
+  {Name="WIDI", Value=97},
+  {Name="Internal USB", Value=98},
+  {Name="UL Launcher", Value=99},
+  {Name="IWB", Value=100},
+  {Name="Web Browser", Value=101},
+  {Name="Remote Workspace", Value=102}
+}
+local AlternativeInputNames = {
+  -- PC Input Types, Overridden to use the named buttons above
+  {Name="HDMI 1_PC", Value=34, ButtonIndex=1},
+  {Name="HDMI 2_PC", Value=36, ButtonIndex=2},
+  {Name="HDMI 3_PC", Value=50, ButtonIndex=3},
+  {Name="HDMI 4_PC", Value=52, ButtonIndex=4},
+  {Name="DVI_Video", Value=31, ButtonIndex=14},
+}
+function GetInputIndex(val)
+  for i,input in ipairs(InputTypes) do
+    if(input.Value == val)then
+      return i
+    end
+  end
+  for i,input in ipairs(AlternativeInputNames) do
+    if(input.Value == val)then
+      return input.ButtonIndex
+    end
+  end
+end
+
+-- These are in order, based on their hex value converted to decimal
+local PanelType = { 
+  "PDP",
+  "LCD",
+  "DLP",
+  "LED",
+  "CRT",
+  "OLED"
+}
+
+-- These are in order, based on their hex value converted to decimal
+local ModelList = { 
+  "PPM50H2",
+  "PPM42S2",
+  "PS-42P2ST",
+  "PS-50P2HT",
+  "SyncMaster 400T",
+  "SyncMaster 403T",
+  "PPM42S3, SPD-42P3SM",
+  "PPM50H3, SPD-50P3HM",
+  "PPM63H3, SPD-63P3HM",
+  "PS-42P3ST",
+  "SyncMaster 323T",
+  "SyncMaster 403T – CT40CS(N)",
+  "PPMxxM5x",
+  "SyncMaster 320P(n), SyncMaster 400P(n), SyncMaster 460P(n)",
+  "-",
+  "SyncMaster 320PX, SyncMaster 400PX(n), SyncMaster 460PX(n)",
+  "-",
+  "-",
+  "SyncMaster 400TX(n)",
+  "SyncMaster 570DX",
+  "SyncMaster 320DX(n), SyncMaster 400DX(n), SyncMaster 460DX(n), SyncMaster 700DX(n), SyncMaster 820DX(n)",
+  "SyncMaster 460TX(n)",
+  "SyncMaster 400UX(n), SyncMaster 460UX(n), SyncMaster 460DR(n)",
+  "SyncMaster 42TS, SyncMaster 42PS, SyncMaster P42HP",
+  "SyncMaster P50Hn",
+  "SyncMaster P50F(n), SyncMaster P50FP",
+  "SyncMaster P63F(n), SyncMaster P63FP",
+  "SyncMaster 320MX(n)",
+  "SyncMaster 400CX(n), SyncMaster 400MX(n), SyncMaster 400MP(n)",
+  "-",
+  "-",
+  "SyncMaster 460CX(n), SyncMaster 460MP(n)",
+  "SyncMaster 520DX(n)",
+  "SyncMaster 400Uxn-UD, SyncMaster 460Uxn-UD",
+  "SyncMaster 400FX(n)",
+  "SyncMaster 460DRn-A",
+  "SyncMaster 460Utn-UD",
+  "SyncMaster 460UT(n)",
+  "SyncMaster 320MX(n)-2, SyncMaster 320MP-2",
+  "SyncMaster 400MX(n)-2, SyncMaster 400FP(n)-2",
+  "SyncMaster 460MX(n)-2, SyncMaster 460FP(n)-2",
+  "SyncMaster P42H-2",
+  "SyncMaster P50HP",
+  "SyncMaster P50FP",
+  "SyncMaster P63FP",
+  "SyncMaster 460Rn-S",
+  "SyncMaster 400DXn-S",
+  "SyncMaster 460DXn-S",
+  "SyncMaster 400CX(n)-2, SyncMaster 460CX(n)-2 ",
+  "SyncMaster 400DX(n)-2, SyncMaster 460DX(n)-2, SyncMaster 700DX(n)-2, SyncMaster 820DX(n)-2, SyncMaster 650MP(n)",
+  "SyncMaster 400UX(n)-2, SyncMaster 460UX(n)-2",
+  "SyncMaster 700DRn",
+  "SyncMaster 230TSn, SyncMaster 230MXn",
+  "SyncMaster 460DMn",
+  "SyncMaster 400Uxn-UD2, SyncMaster 460Uxn-UD2",
+  "SyncMaster P50HP-2",
+  "SyncMaster P63FP-2",
+  "SyncMaster 400Exn",
+  "SyncMaster 460Exn",
+  "SyncMaster 550Exn",
+  "SyncMaster 460UT(n)-2",
+  "SyncMaster 550DX(n)",
+  "SyncMaster 460CX(n)-3, SyncMaster 400CX(n)-3, SyncMaster 320CX(n)-3",
+  "SyncMaster 520LD",
+  "SyncMaster 460UX(n)-3 SyncMaster 400UX(n)-3 SyncMaster 400BX",
+  "SyncMaster 460TS(n)-3 SyncMaster 400TS(n)-3",
+  "SyncMaster 460UT(n)-UD2",
+  "UE46A/UE55A ME40A/ME46A/ME55A DE40A/DE46A/DE55A MD32B/MD40B/MD46B/MD55B ME32B/ME40B/ME46B ME55B/ME65B/ME75B, SL46B",
+  "SyncMaster UD55A",
+  "DE40C/DE46C/DE55C/UD46C/UD55C/UE46C/UE55C",
+  "SyncMaster UD22A",
+  "SyncMaster NL22B",
+  "MD32C, MD40C, MD46C, MD55C, ME95C",
+  "ED32C/ED40C/ED46C/ED55C/ED65C/ED75C/ED32D/ED40D/ED46D/ED55D/ED65D/ED75D",
+  "SyncMaster LE32C, SyncMaster LE46C, SyncMaster LE55C",
+  "SyncMaster UD46C-B",
+  "ME32C/ME40C/ME46C/ME55C",
+  "SyncMaster UD55C-B",
+  "DB22D/DB32D/DB40D/DB48D/DB55D/DM32D/OH46D/OH55D",
+  "DM40D/DM48D/DM55DDM65D/DM75D, UE46D/UE55D, DH40D/DH48D/DH55D, OM46D/OM55D/OM75D",
+  "EB40D/EB48D",
+  "SyncMasterQM55D, SyncMasterQM85D, SyncMasterQM50D, SyncMasterQM40D, SyncMasterQM105D",
+  "EM65E/EM75E, ED65E/ED75E",
+  "DH40E,DH48E,DH55E, DM32E,DM40E,DM48E, DM55E,DM65E,DM75E, DB32E,DB40E,DB48E,DB55E, DM65E-BR, DM75E-BR, DM82E-BR, PE40E,PE46E,PE55E, DM10E, OHE, OME, MLE, SHF, UD46E, UD46E-P, UD55EP, UD55E-P, UD55E, UD55E-SS",
+  "RH48E, RH55E",
+  "SyncMaster UD46E-B, SyncMaster UD55E-B, SyncMaster UD46E-C, SyncMaster UD46E-A, SyncMaster UD55E-A, SyncMaster UH55F-E, SyncMaster UM55H-E, SyncMaster UH46N-E, SyncMaster UM46N-E",
+  "IL015E/ IL025E/IL20E/ILF/ISF",
+  "SBB-ES",
+  "DC32E / DC40E / DC48E / DC55E",
+  "OM24E, OH24E/OH75E",
+  "SBB-MT",
+  "DC32E, DC32E-M / DC40EM / DC40E-M / DC48EM / DC48E-M / DC55EM / DC55E-MM, DC32E, DC32E-H / DC40EH / DC40E-H / DC48EH / DC48E-H / DC55EH / DC55E-H",
+  "QM49F / QM55F / QM65F / QM75F / QM98F",
+  "PM32F / PM43F / PM49F / PM55F / PH43F / PH49F / PM32F / PM43F / PM49F / PM55F / PH43F / PH49F / PF55F/ PF55F / ML55F/ ML55F-R / PH43FR / PH43F-P / PH49FP / PH49F-P/ PH55FP / PH55F-P / PM43H / PM49H / PM55HP / PM43H / PM49H / PM55H",
+  "OM46F / OM55F / OH46F / OH55F / OM46F / OM55F / OH46F / OH55F",
+  "DC90F",
+  "UH46F5",
+  "OH85F",
+  "DC43H / DC49H / DC55H",
+  "QMH / QHH / PMJ / PHJ / PBJ",
+  "IFH",
+  "OHH",
+  "RM49H",
+  "DC43J / DC49JDC49J",
+  "QMN / QBN / QEN / QHR/ QMR / QMR-N / QBR / QBR-N / QBR-T / SHR / QET",
+  "OHN / OHN-K / OHN-D / OHN-DK / OMN-D / OHF-S",
+  "VMRNU",
+  "QER / QPR-8K",
+  "BE43R, BE49R",
+  "VH55R-R",
+  "OMR",
+  "QPT-8K"
+}
+
+function GetColor(props)
+  return { 102, 102, 102 }
+end
+
+function GetPrettyName()
+  return "Samsung Commercial Display " .. PluginInfo.Version
+end
+
+local pagenames = {"Setup","Control"}
+function GetPages(props)
+  local pages = {}
+  for ix,name in ipairs(pagenames) do
+    table.insert(pages, {name = pagenames[ix]})
+  end
+  return pages
+end
+
+function GetProperties()
+	local props = {}
+  table.insert(props,{
+    Name    = "Connection Type",
+    Type    = "enum", 
+    Choices = {"Ethernet", "Serial"},
+    Value   = "Ethernet"
+  })
+  table.insert(props,{
+    Name    = "Debug Print",
+    Type    = "enum",
+    Choices = {"None", "Tx/Rx", "Tx", "Rx", "Function Calls", "All"},
+    Value   = "None"
+  })
+  table.insert(props,{
+    Name  = "Poll Interval",
+    Type  = "integer",
+    Min   = 1,
+    Max   = 60, 
+    Value = 3
+  })
+  table.insert(props,{
+    Name  = "Get Device Info",
+    Type  = "boolean",
+    Value = true
+  })
+	return props
+end
+
+function RectifyProperties(props)
+  if props.plugin_show_debug.Value == false then 
+    props["Debug Print"].IsHidden = true 
+  end
+	return props
+end
+
+function GetControls(props)
+  local ctrls = {}
+
+  table.insert(ctrls, {
+    Name         = "code",
+    ControlType  = "Text",
+    Count        = 1,
+    UserPin      = true,
+    PinStyle     = "Input"
+  })
+
+  -- Configuration Controls --
+  table.insert(ctrls, {
+    Name         = "IPAddress",
+    ControlType  = "Text",
+    Count        = 1,
+    DefaultValue = "Enter an IP Address",
+    UserPin      = true,
+    PinStyle     = "Both"
+  })
+  table.insert(ctrls, {
+    Name         = "Port",
+    ControlType  = "Text",
+    ControlUnit  = "Integer",
+    DefaultValue = "1515",
+    Min          = 1,
+    Max          = 65535,
+    Count        = 1,
+    UserPin      = true,
+    PinStyle     = "Both"
+  })
+  table.insert(ctrls, {
+    Name         = "DisplayID",
+    ControlType  = "Knob",
+    ControlUnit  = "Integer",
+    Count        = 1,
+    UserPin      = true,
+    PinStyle     = "Both",
+    DefaultValue = 0,
+    Min          = 0,
+    Max          = 253
+  })
+  table.insert(ctrls, {
+    Name         = "Broadcast",
+    ControlType  = "Button",
+    ButtonType   = "Toggle",
+    Count        = 1,
+    UserPin      = true,
+    PinStyle     = "Both"
+  })
+  table.insert(ctrls, {
+    Name         = "Reset",
+    ControlType  = "Button",
+    ButtonType   = "Trigger",
+    Count        = 1,
+    UserPin      = true,
+    PinStyle     = "Input"
+  })
+  
+  -- Status Controls --
+  table.insert(ctrls, {
+    Name          = "Status",
+    ControlType   = "Indicator",
+    IndicatorType = Reflect and "StatusGP" or "Status",
+    PinStyle      = "Output",
+    UserPin       = true,
+    Count         = 1
+  })
+  table.insert(ctrls, {
+    Name         = "ModelNumber",
+    ControlType  = "Text",
+    PinStyle     = "Output",
+    UserPin      = true,
+    Count        = 1
+  })
+  table.insert(ctrls, {
+    Name         = "PanelType",
+    ControlType  = "Text",
+    PinStyle     = "Output",
+    UserPin      = true,
+    Count        = 1
+  })
+  table.insert(ctrls, {
+    Name         = "ModelName",
+    ControlType  = "Text",
+    PinStyle     = "Output",
+    UserPin      = true,
+    Count        = 1
+  })
+  table.insert(ctrls, {
+    Name         = "DeviceName",
+    ControlType  = "Text",
+    PinStyle     = "Output",
+    UserPin      = true,
+    Count        = 1
+  })
+  table.insert(ctrls, {
+    Name         = "SerialNumber",
+    ControlType  = "Text",
+    PinStyle     = "Output",
+    UserPin      = true,
+    Count        = 1
+  })
+  table.insert(ctrls, {
+    Name         = "DeviceFirmware",
+    ControlType  = "Text",
+    PinStyle     = "Output",
+    UserPin      = true,
+    Count        = 1
+  })
+  table.insert(ctrls, {
+    Name         = "MACAddress",
+    ControlType  = "Text",
+    PinStyle     = "Output",
+    UserPin      = true,
+    Count        = 1,
+    DefaultValue = ""
+  })
+  
+  -- Power Controls --
+  table.insert(ctrls, {
+    Name          = "PowerStatus",
+    ControlType   = "Indicator",
+    IndicatorType = "Led",
+    Count         = 1,
+    UserPin       = true,
+    PinStyle      = "Output"
+  })
+  table.insert(ctrls, {
+    Name          = "StandbyStatus",
+    ControlType   = "Indicator",
+    IndicatorType = "Led",
+    Count         = 1,
+    UserPin       = true,
+    PinStyle      = "Output"
+  })
+  table.insert(ctrls, {
+    Name         = "Power",
+    ControlType  = "Button",
+    ButtonType   = "Trigger",
+    Count        = 1,
+    UserPin      = true,
+    PinStyle     = "Input",
+    Icon         = "Power"
+  })
+  table.insert(ctrls, {
+    Name         = "PowerOn",
+    ControlType  = "Button",
+    ButtonType   = "Trigger",
+    Count        = 1,
+    UserPin      = true,
+    PinStyle     = "Input"
+  })
+  table.insert(ctrls, {
+    Name         = "PowerOff",
+    ControlType  = "Button",
+    ButtonType   = "Trigger",
+    Count        = 1,
+    UserPin      = true,
+    PinStyle     = "Input"
+  })
+  table.insert(ctrls, {
+    Name         = "Reboot",
+    ControlType  = "Button",
+    ButtonType   = "Trigger",
+    Count        = 1,
+    UserPin      = true,
+    PinStyle     = "Input"
+  })
+  
+  -- Panel Controls --
+  table.insert(ctrls, {
+    Name          = "PanelStatus",
+    ControlType   = "Indicator",
+    IndicatorType = "Led",
+    Count         = 1,
+    UserPin       = true,
+    PinStyle      = "Output"
+  })
+  table.insert(ctrls, {
+    Name         = "Panel",
+    ControlType  = "Button",
+    ButtonType   = "Trigger",
+    Count        = 1,
+    UserPin      = true,
+    PinStyle     = "Input",
+    Icon         = "Power"
+  })
+  table.insert(ctrls, {
+    Name         = "PanelOn",
+    ControlType  = "Button",
+    ButtonType   = "Trigger",
+    Count        = 1,
+    UserPin      = true,
+    PinStyle     = "Input"
+  })
+  table.insert(ctrls, {
+    Name         = "PanelOff",
+    ControlType  = "Button",
+    ButtonType   = "Trigger",
+    Count        = 1,
+    UserPin      = true,
+    PinStyle     = "Input"
+  })
+  -- Input Controls --
+  table.insert(ctrls, {
+    Name         = "Input",
+    ControlType  = "Text",
+    PinStyle     = "Output",
+    UserPin      = true,
+    Count        = 1
+  })
+  table.insert(ctrls, {
+    Name         = "InputButtons",
+    ControlType  = "Button",
+    ButtonType   = "Momentary",
+    Count        = InputCount,
+    UserPin      = true,
+    PinStyle     = "Both"
+  })
+  table.insert(ctrls, {
+    Name          = "InputStatus",
+    ControlType   = "Indicator",
+    IndicatorType = "Led",
+    Count         = InputCount
+  })
+  table.insert(ctrls, {
+    Name         = "InputNext",
+    ControlType  = "Button",
+    ButtonType   = "Trigger",
+    Count        = 1,
+    UserPin      = true,
+    PinStyle     = "Input"
+  })
+  
+  -- Sound Controls --
+  table.insert(ctrls, {
+    Name         = "Volume",
+    ControlType  = "Knob",
+    ControlUnit  = "Integer",
+    DefaultValue = 0,
+    Min          = 0,
+    Max          = 100,
+    Count        = 1,
+    UserPin      = true,
+    PinStyle     = "Both"
+  })
+  table.insert(ctrls, {
+    Name         = "VolumeUp",
+    ControlType  = "Button",
+    ButtonType   = "Trigger",
+    Count        = 1,
+    UserPin      = true,
+    PinStyle     = "Input",
+    Icon         = "Plus"
+  })
+  table.insert(ctrls, {
+    Name         = "VolumeDown",
+    ControlType  = "Button",
+    ButtonType   = "Trigger",
+    Count        = 1,
+    UserPin      = true,
+    PinStyle     = "Input",
+    Icon         = "Minus"
+  })
+  table.insert(ctrls, {
+    Name         = "Mute",
+    ControlType  = "Button",
+    ButtonType   = "Toggle",
+    Count        = 1,
+    UserPin      = true,
+    PinStyle     = "Both"
+  })
+  return ctrls
+end
+
+function GetPins(props)
+  local pins = {}
+  if props["Connection Type"].Value=="Serial" then 
+    table.insert(pins,{Name="input", Direction="input", Domain="serial"})
+  end
+  return pins
+end
+
+function GetControlLayout(props)
+  local layout = {}
+  local graphics = {}
+  local CurrentPage = pagenames[props["page_index"].Value]
+  local colors = {  
+    Background  = {232,232,232},
+    Transparent = {255,255,255,0},
+    Text        = {24,24,24},
+    Header      = {0,0,0},
+    Button      = {48,32,40},
+    Red         = {217,32,32},
+    DarkRed     = {80,16,16},
+    Green       = {32,217,32},
+    OKGreen     = {48,144,48},
+    Blue        = {32,32,233},
+    Black       = {0,0,0},
+    White       = {255,255,255},
+    Gray        = {96,96,96}
+  }
+  
+  layout["code"]={PrettyName="code",Style="None"}  
+
+  if CurrentPage == "Setup" then
+    -- User defines connection properties
+    table.insert(graphics,{Type="GroupBox",Text="Connect",Fill=colors.Background,StrokeWidth=1,CornerRadius=4,HTextAlign="Left",Position={5,5},Size={400,120}})
+    if props["Connection Type"].Value=="Ethernet" then 
+      table.insert(graphics,{Type="Text",Text="IP Address",Position={15,35},Size={100,16},FontSize=14,HTextAlign="Right"})
+      layout["IPAddress"] = {PrettyName="Settings~IP Address",Style="Text",Color=colors.White,Position={120,35},Size={99,16},FontSize=12}
+      table.insert(graphics,{Type="Text",Text="Port",Position={15,60},Size={100,16},FontSize=14,HTextAlign="Right"})
+      layout["Port"] = {PrettyName="Settings~Port",Style="Text",Color=colors.White,Position={120,60},Size={99,16},FontSize=12}
+      table.insert(graphics,{Type="Text",Text="(1515 default)",Position={221,60},Size={100,18},FontSize=10,HTextAlign="Left"})
+      table.insert(graphics,{Type="Text",Text="Reboot",Position={315,35},Size={70,14},FontSize=12,HTextAlign="Center",Color=colors.Text})
+      layout["Reboot"] = {PrettyName="Power~Reboot", Style="Button", Color=colors.Button, FontColor=colors.Red, FontSize=14, CornerRadius=2, Position={325,48}, Size={50,20} }
+    else
+      table.insert(graphics,{Type="Text",Text="Reset Serial",Position={5,32},Size={110,16},FontSize=14,HTextAlign="Right"})
+      layout["Reset"] = {PrettyName="Settings~Reset Serial", Style="Button", Color=colors.Button, FontColor=colors.Red, FontSize=14, CornerRadius=2, Position={120,30}, Size={50,20} }
+      table.insert(graphics,{Type="Text",Text="Reboot",Position={15,57},Size={100,16},FontSize=14,HTextAlign="Right"})
+      layout["Reboot"] = {PrettyName="Power~Reboot", Style="Button", Color=colors.Button, FontColor=colors.Red, FontSize=14, CornerRadius=2, Position={120,55}, Size={50,20} }
+    end
+    table.insert(graphics,{Type="Text",Text="Display ID",Position={15,85},Size={100,16},FontSize=14,HTextAlign="Right"})
+    layout["DisplayID"] = {Type="Text",PrettyName="Settings~Display ID Number", Style="Text", FontColor=colors.Text, Position={120,85}, Size={99,16}, FontSize=12}
+    
+  
+    -- Status fields updated upon connect show model/name/serial/sw rev
+    table.insert(graphics,{Type="GroupBox",Text="Status",Fill=colors.Background,StrokeWidth=1,CornerRadius=4,HTextAlign="Left",Position={5,135},Size={400,220}})
+    layout["Status"] = {PrettyName="Status~Connection Status", Position={40,165}, Size={330,32}, Padding=4 }
+    table.insert(graphics,{Type="Text",Text="Device Name",Position={15,212},Size={100,16},FontSize=12,HTextAlign="Right"})
+    layout["DeviceName"] = {PrettyName="Status~Device Name", Style="Text", HTextAlign="Left", IsReadOnly=true, Color=colors.Transparent, StrokeWidth=0, FontSize=14, IsBold=true, FontColor=colors.Text, Position={120,211}, Size={255,16} }
+    table.insert(graphics,{Type="Text",Text="Model Name",Position={15,235},Size={100,16},FontSize=12,HTextAlign="Right"})
+    layout["ModelName"] = {PrettyName="Status~Model Name", Style="Text", HTextAlign="Left", IsReadOnly=true, Color=colors.Transparent, StrokeWidth=0, FontSize=14, IsBold=true, FontColor=colors.Text, Position={120,234}, Size={255,16} }
+    table.insert(graphics,{Type="Text",Text="Serial Number",Position={15,258},Size={100,16},FontSize=12,HTextAlign="Right"})
+    layout["SerialNumber"] = {PrettyName="Status~Serial Number", Style="Text", HTextAlign="Left", IsReadOnly=true, Color=colors.Transparent, StrokeWidth=0, FontSize=14, IsBold=true, FontColor=colors.Text, Position={120,257}, Size={255,16} }
+    table.insert(graphics,{Type="Text",Text="Software Version",Position={15,281},Size={100,16},FontSize=12,HTextAlign="Right"})
+    layout["DeviceFirmware"] = {PrettyName="Status~SW Version", Style="Text", HTextAlign="Left", IsReadOnly=true, Color=colors.Transparent, StrokeWidth=0, FontSize=14, IsBold=true, FontColor=colors.Text, Position={120,280}, Size={255,16} }
+    table.insert(graphics,{Type="Text",Text="MAC Address",Position={15,304},Size={100,16},FontSize=12,HTextAlign="Right"})
+    layout["MACAddress"] = {PrettyName="Status~MAC Address", Style="Text", HTextAlign="Left", IsReadOnly=true, Color=colors.Transparent, StrokeWidth=0, FontSize=14, IsBold=true, FontColor=colors.Text, Position={120,303}, Size={255,16} }
+  
+    table.insert(graphics,{Type="Text",Text="Samsung Commercial Display Plugin version "..PluginInfo.Version,Position={15,340},Size={380,14},FontSize=10,HTextAlign="Right", Color=colors.Gray})
+  
+    --Invisible Controls for pin access to data
+    layout["ModelNumber"] = {PrettyName="Status~Model Family", Style="Text", HTextAlign="Left", IsReadOnly=true, Color=colors.Transparent, StrokeWidth=0, FontSize=14, IsBold=true, FontColor=colors.Text, Position={1,1}, Size={1,1}, IsInvisible=true }
+    layout["PanelType"] = {PrettyName="Status~Panel Type", Style="Text", HTextAlign="Left", IsReadOnly=true, Color=colors.Transparent, StrokeWidth=0, FontSize=14, IsBold=true, FontColor=colors.Text, Position={1,1}, Size={1,1}, IsInvisible=true }
+  
+  elseif CurrentPage == "Control" then
+    -- Control interface for the monitor
+    table.insert(graphics,{Type="GroupBox",Text="Control",Fill=colors.Background,StrokeWidth=1,CornerRadius=4,HTextAlign="Left",Position={5,5},Size={305,665}})
+    table.insert(graphics,{Type="Text",Text="Broadcast Mode",Position={108,20},Size={125,25},FontSize=12,HTextAlign="Right", VTextAlign="Middle", Color=colors.Text})
+    layout["Broadcast"] = {PrettyName="Settings~Broadcast", Style="Button", UnlinkOffColor=true, Color=colors.Blue, OffColor=colors.Gray, FontSize=14, CornerRadius=2, Position={234,20}, Size={65,25} }
+    -- Power
+    table.insert(graphics,{Type="Header",Text="Power",Position={15,55},Size={285,14},FontSize=12,HTextAlign="Center",Color=colors.Header})
+    table.insert(graphics,{Type="Text",Text="On",Position={12,70},Size={71,14},FontSize=12,HTextAlign="Center",Color=colors.Text})
+    layout["PowerOn"] = {PrettyName="Power~On", Style="Button", Color=colors.Button, FontColor=colors.Hreen, FontSize=14, CornerRadius=2, Position={15,83}, Size={65,25} }
+    table.insert(graphics,{Type="Text",Text="Off",Position={231,70},Size={71,14},FontSize=12,HTextAlign="Center",Color=colors.Text})
+    layout["PowerOff"] = {PrettyName="Power~Off", Style="Button", Color=colors.Button, FontColor=colors.Red, FontSize=14, CornerRadius=2, Position={234,83}, Size={65,25} }
+    --table.insert(graphics,{Type="Text",Text="Status",Position={12,70},Size={71,14},FontSize=12,HTextAlign="Center",Color=colors.Text})
+    layout["PowerStatus"] = {PrettyName="Power~Status", Style="LED", Color=colors.Blue, OffColor=colors.DarkRed, UnlinkOffColor=true, CornerRadius=6, Position={147,85}, Size={20,20} }
+    --Panel
+    table.insert(graphics,{Type="Header",Text="Panel",Position={15,120},Size={285,14},FontSize=12,HTextAlign="Center",Color=colors.Header})
+    table.insert(graphics,{Type="Text",Text="On",Position={12,135},Size={71,14},FontSize=12,HTextAlign="Center",Color=colors.Text})
+    layout["PanelOn"] = {PrettyName="Panel~On", Style="Button", Color=colors.Button, FontColor=colors.Hreen, FontSize=14, CornerRadius=2, Position={15,148}, Size={65,25} }
+    table.insert(graphics,{Type="Text",Text="Off",Position={231,135},Size={71,14},FontSize=12,HTextAlign="Center",Color=colors.Text})
+    layout["PanelOff"] = {PrettyName="Panel~Off", Style="Button", Color=colors.Button, FontColor=colors.Red, FontSize=14, CornerRadius=2, Position={234,148}, Size={65,25} }
+    --table.insert(graphics,{Type="Text",Text="Status",Position={12,135},Size={71,14},FontSize=12,HTextAlign="Center",Color=colors.Text})
+    layout["PanelStatus"] = {PrettyName="Panel~Status", Style="LED", Color=colors.Blue, OffColor=colors.DarkRed, UnlinkOffColor=true, CornerRadius=6, Position={147,150}, Size={20,20} }
+    -- Inputs
+    table.insert(graphics,{Type="Header",Text="Input",Position={15,185},Size={285,14},FontSize=12,HTextAlign="Center",Color=colors.Header})
+    table.insert(graphics,{Type="Text",Text="Current Input",Position={12,204},Size={75,20},FontSize=12,HTextAlign="Right", VTextAlign="Middle", Color=colors.Text})
+    layout["Input"] = {PrettyName="Input~Current Input", Style="Text", FontColor=colors.Black, FontSize=14, Position={88,204} , Size={211,20} }
+    local i,j=0,0
+    for val,input in pairs(InputTypes) do
+      if (i+(j*4)) < InputCount then
+        table.insert(graphics,{Type="Text",Text=input.Name,Position={12+(73*i),225+j*45},Size={71,22},FontSize=10,Color=colors.Text,HTextAlign="Center", VTextAlign="Bottom"})
+        layout["InputButtons "..(j*4+1+i)] = {PrettyName="Input~"..input.Name, Style="Button", UnlinkOffColor=true, Color=colors.Blue, OffColor=colors.Button, FontColor=colors.White, FontSize=14, Position={15+(73*i), 245+j*45}, Size={65,25} }
+        layout["InputStatus "..(j*4+1+i)] = {PrettyName="Input~Status "..input.Name, Style="LED", Color=colors.White, OffColor=colors.Transparent, UnlinkOffColor=true, StrokeWidth=0, Position={68+(73*i), 247+j*45}, Size={10,10}, ZOrder=-1000}
+        i=i+1
+        if(i>3)then 
+          j=j+1
+          i=0
+        end
+      end
+    end
+    --[[ Next Source Functionality removed due to instability with different models not having all inputs available
+    table.insert(graphics,{Type="Text",Text="Next Source",Position={12+(73*i),160+j*45},Size={71,22},FontSize=10,Color=colors.Text,HTextAlign="Center", VTextAlign="Bottom"})
+    layout["InputNext"] = { PrettyName="Input~Next Source", Style="Button", Color=colors.Button, FontColor=colors.Black, FontSize=14, Position={15+(73*i),180+j*45}, Size={65,25} }
+    ]]
+
+    table.insert(graphics,{Type="Header",Text="Volume",Position={15,555},Size={285,14},FontSize=12,HTextAlign="Center",Color=colors.Header})
+    layout["VolumeDown"] = { PrettyName="Volume~Down", Style="Button", Color=colors.Button, IconColor=colors.White, Position={15,577}, Size={30,30} }
+    layout["Volume"] = { PrettyName="Volume~Level", Style="Fader", Color=colors.Button, Position={50,575}, Size={140,35} }
+    layout["VolumeUp"] = { PrettyName="Volume~Up", Style="Button", Color=colors.Button, IconColor=colors.White, Position={195,577}, Size={30,30} }
+    table.insert(graphics,{Type="Text",Text="Mute",Position={224,566},Size={85,15},FontSize=10,Color=colors.Text,HTextAlign="Center", VTextAlign="Bottom"})
+    layout["Mute"] = { PrettyName="Volume~Mute", Style="Button", Color=colors.Red, Position={234,580}, Size={65,25} }
+
+    table.insert(graphics,{Type="Text",Text="Samsung Commercial Display Plugin version "..PluginInfo.Version,Position={15,655},Size={285,14},FontSize=10,HTextAlign="Right", Color=colors.Gray})
+  end
+  return layout, graphics
+end
