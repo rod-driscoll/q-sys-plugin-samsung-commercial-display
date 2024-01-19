@@ -67,8 +67,8 @@ local Request = {
 	Reboot={Command=17,Data={2}},
 	
 	PanelStatus={Command=249,Data={}},
-	PanelOn={Command=249,Data={1}},
-	PanelOff={Command=249,Data={0}},
+	PanelOn={Command=249,Data={0}},
+	PanelOff={Command=249,Data={1}},
 	
 	DisplayStatus={Command=13,Data={}},
 	InputStatus={Command=20,Data={}},
@@ -841,7 +841,7 @@ end
 -- Panel controls
 Controls["PanelOff"].EventHandler = function()
 	if DebugFunction then print("PanelOff Handler Called") end
-	Controls["PanelStatus"].Value = 0
+	Controls["PanelStatus"].Value = 1
 	Send( Request["PanelOff"], Controls["Broadcast"].Boolean )
 end
 
