@@ -136,6 +136,7 @@ function ReportStatus(state,msg)
 		--Show the power off state if we can't communicate
 		if(state ~= "OK")then
 			Controls["PowerStatus"].Value = 0
+			Controls["PanelStatus"].Value = 0
 		end
 	end
 end
@@ -799,7 +800,7 @@ function HandleResponse(msg)
 	
 	--Panel Status
 	elseif msg["Command"]==249 then
-		Controls["PanelStatus"].Value = msg["Data"][1]
+		Controls["PanelStatus"].Value = not msg["Data"][1]
 
 	--Mute Status
 	elseif msg["Command"]==19 then
@@ -841,7 +842,7 @@ end
 -- Panel controls
 Controls["PanelOff"].EventHandler = function()
 	if DebugFunction then print("PanelOff Handler Called") end
-	Controls["PanelStatus"].Value = 1
+	Controls["PanelStatus"].Value = 0
 	Send( Request["PanelOff"], Controls["Broadcast"].Boolean )
 end
 
