@@ -37,7 +37,7 @@ PowerOnDebounceTime = 20
 PowerOnDebounce = false
 TimeoutCount = 0
 ActiveInput = 1
-for i=1,InputCount do
+for i=1,#Controls['InputButtons'] do
 	if Controls['InputButtons'][i].Boolean then
 		ActiveInput = i
 	end
@@ -136,7 +136,7 @@ function ReportStatus(state,msg)
 		--Show the power off state if we can't communicate
 		if(state ~= "OK")then
 			Controls["PowerStatus"].Value = 0
-			Controls["PanelStatus"].Value = 0
+			Controls["PanelStatus"].Boolean = false
 		end
 	end
 end
@@ -800,7 +800,7 @@ function HandleResponse(msg)
 	
 	--Panel Status
 	elseif msg["Command"]==249 then
-		Controls["PanelStatus"].Value = not msg["Data"][1]
+		Controls["PanelStatus"].Boolean = (msg["Data"][1] == Request["PanelOn"].Data[1])
 
 	--Mute Status
 	elseif msg["Command"]==19 then
@@ -842,12 +842,12 @@ end
 -- Panel controls
 Controls["PanelOff"].EventHandler = function()
 	if DebugFunction then print("PanelOff Handler Called") end
-	Controls["PanelStatus"].Value = 0
+	Controls["PanelStatus"].Boolean = false
 	Send( Request["PanelOff"], Controls["Broadcast"].Boolean )
 end
 
 -- Input controls
-for i=1,InputCount do
+for i=1,#Controls['InputButtons'] do
 	Controls['InputButtons'][i].EventHandler = function(ctrl)
 		if DebugFunction then print("Input Handler Called") end
 		if ctrl.Boolean then
