@@ -6,14 +6,15 @@ END DIGITAL SIGNATURE ]]
 -- by QSC
 -- August 2020
 
+-- Source code location: <https://github.com/rod-driscoll/q-sys-plugin-samsung-commercial-display>
 -- Revision details
--- v1.4.2.0* Rod Driscoll <rod@theavitgroup.com.au> 
+-- v1.4.2.0**** Rod Driscoll <rod@theavitgroup.com.au> 
 -- *unofficial mod of v1.3.0.1
 
 PluginInfo = {
   Name = "Enterprise Manager~Samsung~Commercial Display (MDC) v1.4*",
   Version = "1.4*",
-  BuildVersion = "1.4.2.0*",
+  BuildVersion = "1.4.2.0****",
   Id = "Samsung Commercial Display (MDC) v1.4*",
   Author = "QSC",
   Description = "Control and Status for Samsung Commercial Displays that support the MDC protocol.",
